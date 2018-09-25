@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Conways - Game of Life</title>
+  <link rel="stylesheet" href="">
+  <script type="text/javascript" src="math.js"></script>
+</head>
+<body>
+  <style type="text/css">
+    body {
+      margin: 0;
+      padding: 0;    
+    }
+    canvas {
+      position: absolute;
+      margin: 0;
+      padding: 0;
+      top:0;
+      left:0;
+    }
+    #container {
+      top: 10%;
+      left: 10%;
+      width: 80%;
+      height: 80%;
+      position: absolute;
+      background-color: rgba(223,223,233,0.7);
+      text-align: center;
+      z-index: 99;
+      color: red;
+      border-radius: 23px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+    }
+    #iconBox {
+      /*font-size: 2em;
+      position: absolute;
+      border: 1px solid black;
+      color: black;
+      right: 10px;
+      top: 10px;
+      padding: 7px;
+      border-radius: 23px;*/
+      display: flex;
+      margin: 60px auto;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+/*    .iconBtn {
+      margin: 23px;
+      border: 3px solid rgba(0,0,123,0.42);
+      box-shadow: 3px 4px 1px 1px rgba(0,0,123,0.23);
+      cursor: pointer;
+    }*/
+// button styles
+:root {
+/*  --color-dark:  #161616;
+  --color-ocean:  #416dea;
+  --color-grass: #3dd28d;
+  --color-snow: #FFFFFF;
+  --color-salmon: #F32C52;
+  --color-sun: #feee7d;
+  --color-alge: #7999a9;
+  --color-flower: #353866;
+  --color-smoke: #e4e4e4;*/
+}
+
+.btn {
+  display: flex;
+  overflow: hidden;
+
+  margin: 10px;
+  padding: 12px 12px;
+
+  cursor: pointer;
+/*  user-select: none;
+  transition: all 150ms linear;
+  text-align: center;*/
+  white-space: nowrap;
+  text-decoration: none !important;
+  text-transform: none;
+  text-transform: capitalize;
+
+  /*color: #fff;*/
+  border: 0 none;
+  border-radius: 4px;
+
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+
+/*  -webkit-appearance: none;
+  -moz-appearance:    none;
+  appearance:         none;
+*/ 
+  justify-content: center;
+  align-items: center;
+  flex: 0 0 160px;
+  
+  box-shadow: 2px 5px 10px black;
+
+  &:hover {
+    transition: all 150ms linear;
+
+    opacity: .85;
+  }
+  
+  &:active {
+    transition: all 150ms linear;
+    opacity: .75;
+  }
+  
+  &:focus {
+    outline: 1px dotted #959595;
+    outline-offset: -4px;
+  }
+}
+
+
+    #optionContainer {
+      /*position: absolute;*/
+      top: 50px;
+      padding: 12px;
+    }
+
+    .options {
+      font-size: 1.5em;
+      margin: 22px;
+      padding: 42px;
+      /*width: 33%;*/
+      background-color: rgba(123,123,123,0.7);
+      float: left;
+    }
+
+    .optionRadio input{
+      /*vertical-align: middle;
+      align: center;*/
+      float: left;
+      margin: 3px;
+    }
+
+    .optionRadio {
+      text-align: right;
+    }
+
+    .hide {
+      display: none;
+    }
+
+  </style>
+  <div id="container" class="">
+    <div id="iconBox">
+      <button class="btn center" onClick="initAll()">-restart-</button>
+      <button class="btn center" onClick="playLife()"> play/stop </button>
+      <button class="btn center" style="cursor: help;" onClick="toggleOverlay('infoBox')"> i </button>
+      <button class="btn center" onClick="toggleOverlay()">X</button>
+    </div>
+    
+    <div id="infoBox" class="hide">
+      <h1>Conways - Game of Life</h1>
+      <p>
+        Das Spielfeld ist in Zeilen und Spalten unterteilt und im Idealfall unendlich groß. Jedes Gitterquadrat ist ein zellulärer Automat (Zelle), der einen von zwei Zuständen einnehmen kann, welche oft als lebendig und tot bezeichnet werden. Zunächst wird eine Anfangsgeneration von lebenden Zellen auf dem Spielfeld platziert. Jede lebende oder tote Zelle hat auf diesem Spielfeld genau acht Nachbarzellen, die berücksichtigt werden (Moore-Nachbarschaft). Die nächste Generation ergibt sich durch die Befolgung einfacher Regeln. <a href="https://de.wikipedia.org/wiki/Conways_Spiel_des_Lebens">Quelle Wikipedia</a>
+      </p>
+    </div>
+
+    <div id="optionContainer">
+      <div class="options" id="changeTileSizeBtnz">
+        <table>
+          <tr> <th colspan="2">Tile Size</th> </tr>
+          <tr><td><input type="radio" name="tilesize" id="tilesize_8" value="8">    </td> <td>08x08</td></tr>
+          <tr><td><input type="radio" name="tilesize" id="tilesize_16" value="16">  </td> <td>16x16</td></tr>
+          <tr><td><input type="radio" name="tilesize" id="tilesize_32" value="32">  </td> <td>32x32</td></tr>
+          <tr><td><input type="radio" name="tilesize" id="tilesize_64" value="64">  </td> <td>64x64</td></tr>
+          <tr><td><input type="radio" name="tilesize" id="tilesize_80" value="80">  </td> <td>80x80</td></tr>
+          <tr><td><input type="radio" name="tilesize" id="tilesize_96" value="96">  </td> <td>96x96</td></tr>
+        </table>        
+      </div>
+      <div class="options" id="chageFillFactor">
+        <h4>Set random fill factor [0.n off]</h4>
+        <input type="number" id="randomFillFactor" name="randomFillFactor" value="1.5">
+      </div>
+      <div class="options" id="changeRamdomSeed">
+        <h4>Set random seed</h4>
+        <input type="number" id="randomSeed" name="randomSeed" value="4223"> 
+      </div>
+      <div class="options" id="saveOptions">
+        <h3>Save options</h3>
+        <span></span>
+      </div>
+
+
+    </div>
+  </div>
+
+  <!-- <canvas id="gameCanvas" width="1664" height="640"></canvas> -->
+  <canvas id="gameCanvas"></canvas>
+
+
+  <script type="text/javascript">
+  let TILE = 64;
+  let SEED = 4223;
+  let GRID_RANDOM = 1.6;
+  let GENERATION = 0;
+  let LASTALIFE = 0;
+  let LOOPCOUNTER = 0;
+  let CLONECOUNTER = 0;
+  let CLONEGRIDZ = [];
+  let EVOLUTION = {TILE,SEED,GRID_RANDOM,GENERATION,LASTALIFE,CLONECOUNTER};
+
+  const gameCanvas = document.getElementById("gameCanvas");
+  const ctx = gameCanvas.getContext("2d");
+
+  let HEIGHT = gameCanvas.height;
+  let WIDTH = gameCanvas.width;
+  let GRID_X = Math.floor(WIDTH/TILE);
+  let GRID_Y = Math.floor(HEIGHT/TILE);
+
+  let grid = [];
+
+  const initAll = () => {
+    // reset the counterz
+    GENERATION = 0;
+    LASTALIFE = 0;
+    LOOPCOUNTER = 0;
+    CLONECOUNTER = 0;
+    EVOLUTION.TILE = TILE;
+    EVOLUTION.STARTSEED = SEED+0;
+    EVOLUTION.GRID_RANDOM = GRID_RANDOM;
+    EVOLUTION.GRID_X = GRID_X;
+    EVOLUTION.GRID_Y = GRID_Y;
+
+    // init grid with random less than 1 get empty grid
+    calcGrid();
+    initGrid(GRID_X,GRID_Y,GRID_RANDOM);
+    draw();
+    // playLife();
+    // frankytesting();
+  };
+
+  const calcGrid = () => {
+    gameCanvas.height = Math.floor( window.innerHeight / TILE )*TILE;
+    gameCanvas.width = Math.floor( window.innerWidth / TILE )*TILE;  
+
+    HEIGHT = gameCanvas.height;
+    WIDTH = gameCanvas.width;
+
+    GRID_X = Math.floor(WIDTH/TILE);
+    GRID_Y = Math.floor(HEIGHT/TILE);
+  };
+
+  const myRnd = () => {
+    let r = Math.sin(SEED++) * 10000;
+    return r - Math.floor(r);
+  };
+
+  const initGrid = (X,Y,Random) => {
+    RandomFact = Random||2;
+    for(let y=0;y<=Y;y++) {
+      grid[y] = [];
+      for(let x=0;x<=X;x++) {
+        grid[y][x] = (Math.floor(myRnd()*RandomFact)>=1);
+      }
+    }
+  };
+
+  const doWithGrid = (func) => {
+    const Y = grid.length;
+    const X = grid[0].length;
+    for(let y=0;y<Y;y++) {
+      for(let x=0;x<X;x++) {
+        func(grid[y][x],x,y,grid,X,Y);
+      }
+    }
+  };
+
+  const cloneGrid = () => {
+    let cGrid = [];
+    for(let y=0,yl=grid.length;y<yl;y++) {
+      cGrid[y] = [];
+      for(let x=0,xl=grid[0].length;x<xl;x++) {
+        cGrid[y][x] = grid[y][x];
+      }
+    }
+    return cGrid;
+  }
+
+  const compareGrid = (grid1,grid2) => {
+    if(grid1.length!=grid2.length||grid1[0].length!=grid2[0].length) return false;
+    for(let y=0,yl=grid1.length;y<yl;y++) {
+      for(let x=0,xl=grid1[0].length;x<xl;x++) {
+        if(grid1[y][x] != grid2[y][x]) return false;
+      }
+    }
+    return true;
+  }
+
+
+  const generationHealth = (livingCells) => {
+
+    if(LASTALIFE===livingCells) {
+      LOOPCOUNTER++;
+    } else {
+      LOOPCOUNTER = 0;
+    }
+
+    if(LOOPCOUNTER>1) {
+      CLONEGRIDZ.push(cloneGrid());
+      CLONECOUNTER++;
+      for(let cg=1,cl=CLONEGRIDZ.length; cg<cl; cg++) {
+        if(compareGrid(CLONEGRIDZ[0],CLONEGRIDZ[cg])) {
+          EVOLUTION.REPEATEDDISTANCE = cg-1;
+          EVOLUTION.GENERATION = GENERATION;
+          EVOLUTION.LASTALIFE = LASTALIFE;
+          EVOLUTION.LOOPCOUNTER = LOOPCOUNTER;
+          EVOLUTION.CLONECOUNTER = CLONECOUNTER;
+          EVOLUTION.SEED = SEED;
+          console.log("last EVOLUTION stats");
+          console.dir(EVOLUTION);
+          playLife(`EVOLUTION has stoped ${GENERATION}`,'stop');
+          return false;
+        }
+      }
+    }
+    LASTALIFE = livingCells;
+    return livingCells;
+  };
+
+  
+// old style todo u c
+  function draw() {
+    let countLife = 0;
+    // ctx.fillStyle = '#FFF';
+    ctx.clearRect(0, 0, WIDTH, HEIGHT);
+
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth ="3";
+    ctx.strokeRect(0, 0, WIDTH, HEIGHT);
+    ctx.lineWidth ="1";
+    ctx.stroke();
+    for(let y=0;y<=GRID_Y;y++) {
+      for(let x=0;x<=GRID_X;x++) {
+        let neX = (TILE*x);
+        let neY = (TILE*y);
+        ctx.strokeRect(neX,neY,TILE,TILE);
+        if(grid[y][x]) {
+          ctx.fillStyle = '#000';
+          ctx.fillRect(neX,neY,TILE,TILE);
+          countLife++;
+        }
+        ctx.fill();ctx.stroke();
+      }
+    }
+
+    return generationHealth(countLife);
+  }
+
+  function hmNeighbours(grid,x,y) {
+    let w = grid[0].length;
+    let h = grid.length;
+    let n = [ [-1,-1],[-1,0],[-1,+1],[0,-1],[0,+1],[+1,-1],[+1,0],[+1,+1] ];
+    let count = 0;
+    for(mn in n) {
+      let nc = n[mn];
+      let nx = (x+nc[0])%w;
+      let ny = (y+nc[1])%h;
+      if(nx===-1) nx=w-1;
+      if(ny===-1) ny=h-1;
+      if(grid[ny][nx]) count++;
+    }
+    return count;
+  }
+
+  function nextGen() {
+    let newGrid = [];
+    for(let y=0;y<=GRID_Y;y++) {
+      newGrid[y] = [];
+      for(let x=0;x<=GRID_X;x++) {
+        let non = hmNeighbours(grid,x,y);
+        let nval = grid[y][x];
+        if(non===3) {
+          nval = true;
+        } else if(non>3||non<2) {
+          nval = false;
+        }
+        newGrid[y][x] = nval;
+      }
+    }
+    GENERATION++;
+    return newGrid;
+  }
+
+  // 
+  // Know life forms
+  // 
+  const lf_glider = [
+    [0,1,0],
+    [0,0,1],
+    [1,1,1]
+  ];
+
+  const lf_sailer1 = [
+    [0,1,1,1,1],
+    [1,0,0,0,1],
+    [0,0,0,0,1],
+    [1,0,0,1,0]
+  ];
+
+  const ls_pentomino = [
+    [0,1,1],
+    [1,1,0],
+    [0,1,0],
+  ];
+
+  const hmn_frank9 = [
+    [1,1,1],
+    [1,0,1],
+    [1,1,1],
+  ];
+
+  const hmn_frank5 = [
+    [0,0,0],
+    [1,0,1],
+    [1,1,1],
+  ];
+
+  const hmn_frank3 = [
+    [0,0,0],
+    [1,0,1],
+    [1,0,0],
+  ];
+
+  const hmn_frank2 = [
+    [0,0,0],
+    [0,0,1],
+    [1,0,0],
+  ];
+
+  const hmn_frank1 = [
+    [1,0,0],
+    [0,0,0],
+    [0,0,0],
+  ];
+
+  const hmn_franklist = [hmn_frank1,hmn_frank2,hmn_frank3,hmn_frank5,hmn_frank9];
+
+  const frankytesting = () => {
+    let stepWide = 4;
+    let x = 4;
+    let y = 4;
+    for(let fc in hmn_franklist) {
+      toGrid(x+(fc*stepWide),y,hmn_franklist[fc]);
+      draw();
+      let myNeighbours = hmNeighbours(grid,x+(fc*stepWide)+1,y+1);
+      console.dir(hmn_franklist[fc]);
+      console.log(`Step ${fc} we have ${myNeighbours} here`);
+    }
+  };
+
+  // spawn some lifeforms
+  const toGrid = (x,y,frankenstein) => {
+    let frst = frankenstein||lf_sailer1;
+    let wi = frst[0].length;
+    let hi = frst.length;
+    if(x+wi>GRID_X) x = GRID_X-wi-1;
+    if(y+hi>GRID_Y) y = GRID_Y-hi-1;
+    for(let ly=0;ly<hi;ly++) {
+      for(let lx=0;lx<wi;lx++) {
+        grid[y+ly][x+lx] = (frst[ly][lx]===1);
+      }
+    }
+  };
+
+  const startLife = (x,y) => {
+    initGrid(GRID_X,GRID_Y,0.1);
+    toGrid(x,y,ls_pentomino);
+    playLife("we start life");
+  }
+  // 
+
+  let intervalID = 0;
+
+  const stepLife = () => {
+    grid = nextGen();
+    let life = draw();
+    console.log(`generation #${GENERATION} the number of life #${life}`);
+    if(life===0) playLife("all dead !!!1!");
+  };
+
+  const playLife = (msg,state) => {
+    if (msg||false) console.log(msg);
+    let haveState = state||'';   
+    if(intervalID!=0&&haveState!='start') {
+      clearInterval(intervalID);
+      intervalID=0;
+    } else if(intervalID===0&&haveState!='stop') {
+      intervalID = setInterval(stepLife, 300);
+    }
+  };
+
+  const giveTypeOr = (typeList,type,fallbackValue) => {
+    const faVa = fallbackValue||'';
+    for(let oc in typeList) {
+      if(typeof typeList[oc] === type) {
+        return typeList[oc];
+      }
+    }
+    return faVa;
+  };
+
+  const toggleOverlay = (...args) => {
+    console.dir(args);
+    const id = giveTypeOr(args,"string","container");
+    const overCon = document.getElementById(id);
+    const isVis = (overCon.className.indexOf("hide")===-1);
+    if(isVis) {
+      overCon.className += " hide";
+    } else {
+      overCon.className = overCon.className.replace(/hide/g,"");
+    }
+  };
+
+
+  let changeTileSize = (e,p) => {
+    // console.dir(e);
+    newSize = parseInt(e.target.id.replace(/tilesize_/ig,''));
+    if(TILE!=newSize) {
+      TILE=newSize;
+      initAll();
+    }
+    console.log(`${e.target.id}`);
+    // console.dir(p);
+  };
+
+  // add event listener
+  document.getElementById("gameCanvas").addEventListener("click", toggleOverlay);
+  document.getElementById("changeTileSizeBtnz").addEventListener("click", changeTileSize);
+
+
+
+  // start with some action func defined at the top
+  initAll();
+
+
+  function loadWebAssembly(filename, imports = {}) {
+    return fetch(filename)
+      .then(response => response.arrayBuffer())
+      .then(buffer => WebAssembly.compile(buffer))
+      .then(module => {
+        imports.env = imports.env || {};
+        Object.assign(imports.env, {
+          memoryBase: 0,
+          tableBase: 0,
+          memory: new WebAssembly.Memory({ initial: 256, maximum: 256 }),
+          table: new WebAssembly.Table({ initial: 0, maximum: 0, element: 'anyfunc' })
+        })
+        return new WebAssembly.Instance(module, imports);
+      })
+  }
+
+  function loadJS (url, imports = {}) {
+    return fetch(url)
+      .then(response => response.text())
+      .then(code => new Function('imports', `return (${code})()`))
+      .then(factory => ({ exports: factory(imports) }))
+  }
+
+
+
+  </script>
+</body>
+</html>
